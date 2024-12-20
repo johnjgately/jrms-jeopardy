@@ -1,9 +1,10 @@
-import React from 'react';
-import { QuestionBank } from '../../types/game';
+import { motion } from 'framer-motion';
+import { CustomQuestionSet } from '../../types/game';
+import '../../styles/jeopardy-theme.css';
 
 interface QuestionBankListProps {
-  questionBanks: QuestionBank[];
-  onSelect: (bank: QuestionBank) => void;
+  questionBanks: CustomQuestionSet[];
+  onSelect: (bank: CustomQuestionSet) => void;
 }
 
 export default function QuestionBankList({
@@ -11,22 +12,56 @@ export default function QuestionBankList({
   onSelect,
 }: QuestionBankListProps) {
   return (
-    <div className="max-w-md mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-6">Select Question Set</h2>
-      <div className="space-y-4">
-        {questionBanks.map((bank) => (
-          <button
-            key={bank.id}
-            onClick={() => onSelect(bank)}
-            className="w-full p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow text-left"
-          >
-            <div className="font-bold">{bank.name}</div>
-            <div className="text-sm text-gray-500">
-              Created: {new Date(bank.dateCreated).toLocaleDateString()}
-            </div>
-          </button>
-        ))}
+    <motion.div 
+      className="min-h-screen bg-gradient-to-b from-blue-900 to-blue-950 p-6 flex items-center justify-center"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
+      <div className="w-full max-w-2xl">
+        <motion.h2 
+          className="game-title text-4xl mb-8 text-center"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+        >
+          Select Question Set
+        </motion.h2>
+        
+        <motion.div 
+          className="space-y-4"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          {questionBanks.map((bank, index) => (
+            <motion.button
+              key={bank.id}
+              onClick={() => onSelect(bank)}
+              className="w-full p-6 bg-blue-900 rounded-lg border-2 border-yellow-400 hover:border-yellow-300 transition-colors text-left shadow-lg hover:shadow-xl"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <div className="font-korinna text-yellow-400 text-2xl mb-2">{bank.name}</div>
+              <div className="text-white/80 font-korinna">
+                Created: {new Date(bank.dateCreated).toLocaleDateString()}
+              </div>
+            </motion.button>
+          ))}
+
+          {questionBanks.length === 0 && (
+            <motion.div
+              className="text-center text-yellow-400 font-korinna text-xl p-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              No question sets available. Create one first!
+            </motion.div>
+          )}
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -1,180 +1,218 @@
-import React, { useState } from 'react';
-import { Category, GameQuestions } from '../../types/game';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { GameQuestions } from '../../types/game';
+import { saveCustomQuestionSet } from '../../utils/storage';
 
 interface QuestionFormProps {
-  onSave: (questions: GameQuestions) => void;
+  onSave: () => void;
+  onCancel: () => void;
 }
 
-export default function QuestionForm({ onSave }: QuestionFormProps) {
-  const [currentRound, setCurrentRound] = useState<1 | 2>(1);
-  const [round1, setRound1] = useState<Category[]>([]);
-  const [round2, setRound2] = useState<Category[]>([]);
-  const [error, setError] = useState<string>('');
+interface CategoryForm {
+  name: string;
+  questions: {
+    question: string;
+    answer: string;
+    value: number;
+  }[];
+}
 
-  const baseValues = {
-    1: [200, 400, 600, 800, 1000],
-    2: [400, 800, 1200, 1600, 2000],
-  };
+const QUESTION_VALUES = [400, 800, 1200, 1600, 2000];
 
-  const validateQuestions = (categories: Category[]): boolean => {
-    if (categories.length !== 6) return false;
-    return categories.every(category => 
-      category.questions.every(q => q.question.trim() && q.answer.trim())
-    );
-  };
+export default function QuestionForm({ onSave, onCancel }: QuestionFormProps) {
+  const [setName, setSetName] = useState('');
+  const [round1Categories, setRound1Categories] = useState<CategoryForm[]>(
+    Array(6).fill(null).map(() => ({
+      name: '',
+      questions: QUESTION_VALUES.map(value => ({
+        question: '',
+        answer: '',
+        value,
+      })),
+    }))
+  );
+
+  const [round2Categories, setRound2Categories] = useState<CategoryForm[]>(
+    Array(6).fill(null).map(() => ({
+      name: '',
+      questions: QUESTION_VALUES.map(value => ({
+        question: '',
+        answer: '',
+        value: value * 2,
+      })),
+    }))
+  );
 
   const handleSave = () => {
-    if (!validateQuestions(round1) || !validateQuestions(round2)) {
-      setError('Please complete all categories and questions for both rounds');
+    if (!setName.trim()) {
+      alert('Please enter a name for your question set');
       return;
     }
-    
-    onSave({ round1, round2 });
+
+    // Validate all categories have names
+    if ([...round1Categories, ...round2Categories].some(cat => !cat.name.trim())) {
+      alert('All categories must have names');
+      return;
+    }
+
+    // Validate all questions and answers are filled
+    if ([...round1Categories, ...round2Categories].some(cat =>
+      cat.questions.some(q => !q.question.trim() || !q.answer.trim())
+    )) {
+      alert('All questions and answers must be filled out');
+      return;
+    }
+
+    // Convert form data to GameQuestions format
+    const gameQuestions: GameQuestions = {
+      round1: round1Categories.map(cat => ({
+        id: crypto.randomUUID(),
+        name: cat.name,
+        questions: cat.questions.map(q => ({
+          id: crypto.randomUUID(),
+          category: cat.name,
+          ...q,
+          isAnswered: false,
+          isDouble: false,
+        })),
+      })),
+      round2: round2Categories.map(cat => ({
+        id: crypto.randomUUID(),
+        name: cat.name,
+        questions: cat.questions.map(q => ({
+          id: crypto.randomUUID(),
+          category: cat.name,
+          ...q,
+          isAnswered: false,
+          isDouble: false,
+        })),
+      })),
+    };
+
+    // Save the question set
+    saveCustomQuestionSet(setName, gameQuestions);
+    onSave();
   };
 
-  const createEmptyCategory = (name: string, roundNum: 1 | 2): Category => ({
-    id: crypto.randomUUID(),
-    name,
-    questions: baseValues[roundNum].map(value => ({
-      id: crypto.randomUUID(),
-      category: name,
-      question: '',
-      answer: '',
-      value,
-      isAnswered: false,
-      isDouble: false,
-    })),
-  });
+  const updateCategory = (roundCategories: CategoryForm[], setRoundCategories: React.Dispatch<React.SetStateAction<CategoryForm[]>>, categoryIndex: number, field: keyof CategoryForm, value: string) => {
+    const newCategories = [...roundCategories];
+    if (field === 'name') {
+      newCategories[categoryIndex].name = value;
+    }
+    setRoundCategories(newCategories);
+  };
 
-  const updateQuestion = (
-    roundNum: 1 | 2,
-    categoryIndex: number,
-    questionIndex: number,
-    field: 'question' | 'answer',
-    value: string
-  ) => {
-    const setRound = roundNum === 1 ? setRound1 : setRound2;
-    const round = roundNum === 1 ? round1 : round2;
-
-    setRound(
-      round.map((category, cIndex) =>
-        cIndex === categoryIndex
-          ? {
-              ...category,
-              questions: category.questions.map((q, qIndex) =>
-                qIndex === questionIndex ? { ...q, [field]: value } : q
-              ),
-            }
-          : category
-      )
-    );
+  const updateQuestion = (roundCategories: CategoryForm[], setRoundCategories: React.Dispatch<React.SetStateAction<CategoryForm[]>>, categoryIndex: number, questionIndex: number, field: keyof Omit<CategoryForm['questions'][0], 'value'>, value: string) => {
+    const newCategories = [...roundCategories];
+    newCategories[categoryIndex].questions[questionIndex][field] = value;
+    setRoundCategories(newCategories);
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="mb-6 flex justify-between items-center">
-        <div className="space-x-4">
-          <button
-            onClick={() => setCurrentRound(1)}
-            className={`px-4 py-2 rounded-md ${
-              currentRound === 1 ? 'bg-blue-600 text-white' : 'bg-gray-200'
-            }`}
-          >
-            Round 1
-          </button>
-          <button
-            onClick={() => setCurrentRound(2)}
-            className={`px-4 py-2 rounded-md ${
-              currentRound === 2 ? 'bg-blue-600 text-white' : 'bg-gray-200'
-            }`}
-          >
-            Round 2
-          </button>
-        </div>
-        <button
-          onClick={handleSave}
-          className="px-4 py-2 bg-green-600 text-white rounded-md"
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="p-6 bg-gradient-to-b from-blue-900 to-blue-950 min-h-screen text-yellow-400"
+    >
+      <div className="max-w-7xl mx-auto">
+        <motion.h2
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="text-4xl font-bold mb-8 text-center"
         >
-          Save Questions
-        </button>
-      </div>
+          Create Question Set
+        </motion.h2>
 
-      {error && (
-        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
-          {error}
-        </div>
-      )}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="mb-8"
+        >
+          <label className="block text-xl mb-2">Question Set Name</label>
+          <input
+            type="text"
+            value={setName}
+            onChange={(e) => setSetName(e.target.value)}
+            className="w-full p-3 bg-blue-800 rounded-md border-2 border-yellow-400 text-yellow-400 placeholder-yellow-600"
+            placeholder="Enter a name for your question set"
+          />
+        </motion.div>
 
-      <div className="grid grid-cols-3 gap-6">
-        {Array.from({ length: 6 }).map((_, categoryIndex) => {
-          const round = currentRound === 1 ? round1 : round2;
-          const setRound = currentRound === 1 ? setRound1 : setRound2;
-          const category = round[categoryIndex];
-
-          return (
-            <div key={categoryIndex} className="border p-4 rounded-lg">
-              <input
-                type="text"
-                value={category?.name || ''}
-                onChange={(e) => {
-                  const newCategories = [...round];
-                  if (!category) {
-                    newCategories[categoryIndex] = createEmptyCategory(
-                      e.target.value,
-                      currentRound
-                    );
-                  } else {
-                    newCategories[categoryIndex] = {
-                      ...category,
-                      name: e.target.value,
-                    };
-                  }
-                  setRound(newCategories);
-                }}
-                placeholder="Category Name"
-                className="w-full p-2 border rounded-md mb-4"
-              />
-              {category?.questions.map((question, questionIndex) => (
-                <div key={questionIndex} className="mb-4">
-                  <div className="font-bold mb-2">
-                    ${baseValues[currentRound][questionIndex]}
-                  </div>
+        {[
+          { round: 1, categories: round1Categories, setCategories: setRound1Categories },
+          { round: 2, categories: round2Categories, setCategories: setRound2Categories }
+        ].map(({ round, categories, setCategories }) => (
+          <motion.div
+            key={round}
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="mb-12"
+          >
+            <h3 className="text-3xl font-bold mb-6">Round {round}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {categories.map((category, categoryIndex) => (
+                <motion.div
+                  key={categoryIndex}
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: categoryIndex * 0.1 }}
+                  className="bg-blue-800 rounded-lg p-4 border-2 border-yellow-400"
+                >
                   <input
                     type="text"
-                    value={question.question}
-                    onChange={(e) =>
-                      updateQuestion(
-                        currentRound,
-                        categoryIndex,
-                        questionIndex,
-                        'question',
-                        e.target.value
-                      )
-                    }
-                    placeholder="Question"
-                    className="w-full p-2 border rounded-md mb-2"
+                    value={category.name}
+                    onChange={(e) => updateCategory(categories, setCategories, categoryIndex, 'name', e.target.value)}
+                    className="w-full p-2 mb-4 bg-blue-700 rounded border-2 border-yellow-400 text-yellow-400 placeholder-yellow-600"
+                    placeholder={`Category ${categoryIndex + 1}`}
                   />
-                  <input
-                    type="text"
-                    value={question.answer}
-                    onChange={(e) =>
-                      updateQuestion(
-                        currentRound,
-                        categoryIndex,
-                        questionIndex,
-                        'answer',
-                        e.target.value
-                      )
-                    }
-                    placeholder="Answer"
-                    className="w-full p-2 border rounded-md"
-                  />
-                </div>
+                  {category.questions.map((q, questionIndex) => (
+                    <div key={questionIndex} className="mb-4">
+                      <div className="text-sm font-bold mb-1">${q.value}</div>
+                      <input
+                        type="text"
+                        value={q.question}
+                        onChange={(e) => updateQuestion(categories, setCategories, categoryIndex, questionIndex, 'question', e.target.value)}
+                        className="w-full p-2 mb-2 bg-blue-700 rounded border-2 border-yellow-400 text-yellow-400 placeholder-yellow-600"
+                        placeholder="Question"
+                      />
+                      <input
+                        type="text"
+                        value={q.answer}
+                        onChange={(e) => updateQuestion(categories, setCategories, categoryIndex, questionIndex, 'answer', e.target.value)}
+                        className="w-full p-2 bg-blue-700 rounded border-2 border-yellow-400 text-yellow-400 placeholder-yellow-600"
+                        placeholder="Answer"
+                      />
+                    </div>
+                  ))}
+                </motion.div>
               ))}
             </div>
-          );
-        })}
+          </motion.div>
+        ))}
+
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="flex justify-end gap-4 mt-8"
+        >
+          <motion.button
+            onClick={onCancel}
+            className="jeopardy-button bg-red-600 hover:bg-red-700 border-red-400"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Cancel
+          </motion.button>
+          <motion.button
+            onClick={handleSave}
+            className="jeopardy-button"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Save Question Set
+          </motion.button>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

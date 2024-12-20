@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
-import { GameState, QuestionBank } from './types/game';
+import { useState } from 'react';
+import { GameState, CustomQuestionSet, Player, GameQuestions } from './types/game';
 import SetupScreen from './components/Setup/SetupScreen';
 import QuestionForm from './components/QuestionBank/QuestionForm';
 import QuestionBankList from './components/QuestionBank/QuestionBankList';
 import PlayerSetup from './components/PlayerSetup';
 import GameScreen from './components/Game/GameScreen';
-import { saveQuestionBank, getQuestionBanks } from './utils/storage';
+import { loadCustomQuestionSets } from './utils/storage';
 
 type GameMode = 'setup' | 'create' | 'play' | 'player-setup';
 
 export default function App() {
   const [mode, setMode] = useState<GameMode>('setup');
-  const [selectedBank, setSelectedBank] = useState<QuestionBank | null>(null);
+  const [selectedBank, setSelectedBank] = useState<CustomQuestionSet | null>(null);
   const [gameState, setGameState] = useState<GameState>({
     round: 1,
     players: [],
@@ -21,17 +21,28 @@ export default function App() {
     isRoundComplete: false,
   });
 
-  const handleCreateQuestions = (questions: GameQuestions) => {
-    const name = prompt('Enter a name for this question set:');
-    if (name) {
-      saveQuestionBank(name, questions);
-      setMode('setup');
-    }
+  const handleCreateQuestions = () => {
+    setMode('setup');
   };
 
-  const handleSelectQuestionBank = (bank: QuestionBank) => {
+  const handleSelectQuestionBank = (bank: CustomQuestionSet) => {
     setSelectedBank(bank);
     setMode('player-setup');
+  };
+
+  const handlePlayClick = (questions?: GameQuestions) => {
+    if (questions) {
+      // If questions are provided (default set), create a temporary CustomQuestionSet
+      setSelectedBank({
+        id: 'default',
+        name: 'US Military History (Default)',
+        dateCreated: new Date().toISOString(),
+        questions: questions
+      });
+      setMode('player-setup');
+    } else {
+      setMode('play');
+    }
   };
 
   const handlePlayersConfirmed = (players: Player[]) => {
@@ -47,15 +58,15 @@ export default function App() {
   };
 
   if (mode === 'setup') {
-    return <SetupScreen onCreateClick={() => setMode('create')} onPlayClick={() => setMode('play')} />;
+    return <SetupScreen onCreateClick={() => setMode('create')} onPlayClick={handlePlayClick} />;
   }
 
   if (mode === 'create') {
-    return <QuestionForm onSave={handleCreateQuestions} />;
+    return <QuestionForm onSave={handleCreateQuestions} onCancel={() => setMode('setup')} />;
   }
 
   if (mode === 'play' && !selectedBank) {
-    return <QuestionBankList questionBanks={getQuestionBanks()} onSelect={handleSelectQuestionBank} />;
+    return <QuestionBankList questionBanks={loadCustomQuestionSets()} onSelect={handleSelectQuestionBank} />;
   }
 
   if (mode === 'player-setup') {

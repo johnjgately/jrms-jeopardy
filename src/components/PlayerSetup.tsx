@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Users } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Player } from '../types/game';
+import '../styles/jeopardy-theme.css';
 
 interface PlayerSetupProps {
   onPlayersConfirmed: (players: Player[]) => void;
@@ -31,75 +32,105 @@ export default function PlayerSetup({ onPlayersConfirmed }: PlayerSetupProps) {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <div className="flex items-center gap-2 mb-6">
-        <Users className="w-6 h-6 text-blue-600" />
-        <h2 className="text-2xl font-bold text-gray-800">Player Setup</h2>
-      </div>
-
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Number of Players
-        </label>
-        <select
-          className="w-full p-2 border rounded-md"
-          value={numPlayers}
-          onChange={(e) => setNumPlayers(Number(e.target.value))}
+    <motion.div 
+      className="min-h-screen bg-gradient-to-b from-blue-900 to-blue-950 p-6 flex items-center justify-center"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
+      <motion.div 
+        className="w-full max-w-md bg-blue-900 p-8 rounded-lg border-4 border-yellow-400 shadow-2xl"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.2 }}
+      >
+        <motion.h2 
+          className="game-title text-4xl mb-8 text-center"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
         >
-          {[1, 2, 3].map((num) => (
-            <option key={num} value={num}>
-              {num} Player{num > 1 ? 's' : ''}
-            </option>
-          ))}
-        </select>
-      </div>
+          Player Setup
+        </motion.h2>
 
-      {players.length < numPlayers && (
-        <form onSubmit={handleAddPlayer} className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Player {players.length + 1} Name
+        <div className="mb-6">
+          <label className="block text-yellow-400 text-lg font-korinna mb-2">
+            Number of Players
           </label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={currentName}
-              onChange={(e) => setCurrentName(e.target.value)}
-              className="flex-1 p-2 border rounded-md"
-              placeholder="Enter player name"
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              Add
-            </button>
+          <select
+            className="w-full p-3 bg-blue-800 text-yellow-400 border-2 border-yellow-400 rounded-md font-korinna"
+            value={numPlayers}
+            onChange={(e) => setNumPlayers(Number(e.target.value))}
+          >
+            {[1, 2, 3].map((num) => (
+              <option key={num} value={num} className="bg-blue-800">
+                {num} Player{num > 1 ? 's' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {players.length < numPlayers && (
+          <motion.form 
+            onSubmit={handleAddPlayer} 
+            className="mb-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <label className="block text-yellow-400 text-lg font-korinna mb-2">
+              Player {players.length + 1} Name
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={currentName}
+                onChange={(e) => setCurrentName(e.target.value)}
+                className="flex-1 p-3 bg-blue-800 text-white border-2 border-yellow-400 rounded-md font-korinna placeholder-yellow-200/50"
+                placeholder="Enter player name"
+              />
+              <motion.button
+                type="submit"
+                className="jeopardy-button px-6"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Add
+              </motion.button>
+            </div>
+          </motion.form>
+        )}
+
+        {players.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-yellow-400 text-lg font-korinna mb-2">Players:</h3>
+            <motion.ul className="space-y-2">
+              {players.map((player, index) => (
+                <motion.li
+                  key={player.id}
+                  className="p-3 bg-blue-800 rounded-md border-2 border-yellow-400 flex justify-between text-white font-korinna"
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <span>{player.name}</span>
+                  <span className="text-yellow-400">${player.score}</span>
+                </motion.li>
+              ))}
+            </motion.ul>
           </div>
-        </form>
-      )}
+        )}
 
-      <div className="mb-6">
-        <h3 className="text-lg font-medium text-gray-700 mb-2">Added Players:</h3>
-        <ul className="space-y-2">
-          {players.map((player) => (
-            <li
-              key={player.id}
-              className="p-2 bg-gray-50 rounded-md flex justify-between"
-            >
-              <span>{player.name}</span>
-              <span className="text-gray-500">Score: {player.score}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {players.length === numPlayers && (
-        <button
-          onClick={handleConfirm}
-          className="w-full py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-        >
-          Start Game
-        </button>
-      )}
-    </div>
+        {players.length === numPlayers && (
+          <motion.button
+            onClick={handleConfirm}
+            className="jeopardy-button w-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Start Game
+          </motion.button>
+        )}
+      </motion.div>
+    </motion.div>
   );
 }

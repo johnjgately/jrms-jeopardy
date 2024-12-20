@@ -1,0 +1,266 @@
+:root {
+  --jeopardy-blue: #060CE9;
+  --jeopardy-gold: #FFCC00;
+  --jeopardy-light-blue: #0A1172;
+  --jeopardy-text: #FFFFFF;
+  --category-height: 120px;
+  --question-height: 120px;
+}
+
+@font-face {
+  font-family: 'Korinna';
+  src: url('https://db.onlinewebfonts.com/t/c5ce46fa6f226ed1ff0d05b0f48d4cf3.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Korinna';
+  src: url('https://db.onlinewebfonts.com/t/d3b991bce47b3c46f77d6004d5c8cdb4.woff2') format('woff2');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Marker';
+  src: url('https://db.onlinewebfonts.com/t/f3ce08b9f2c7b36402171da32e4225b7.woff2') format('woff2');
+}
+
+.start-page {
+  min-height: 100vh;
+  background: radial-gradient(circle at center, var(--jeopardy-light-blue) 0%, var(--jeopardy-blue) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.start-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 204, 0, 0.1),
+    rgba(255, 204, 0, 0.1) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+}
+
+.game-title {
+  font-family: 'Korinna', serif;
+  font-size: 6rem;
+  font-weight: bold;
+  color: var(--jeopardy-gold);
+  text-align: center;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-shadow: 
+    4px 4px 0px rgba(0, 0, 0, 0.3),
+    0 0 30px rgba(255, 204, 0, 0.5);
+  position: relative;
+  z-index: 1;
+}
+
+.start-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+  z-index: 1;
+}
+
+.start-button {
+  font-family: 'Korinna', serif;
+  font-size: 1.5rem;
+  font-weight: bold;
+  padding: 1rem 2rem;
+  background: var(--jeopardy-light-blue);
+  color: var(--jeopardy-gold);
+  border: 3px solid var(--jeopardy-gold);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.start-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(255, 204, 0, 0.3);
+  background: var(--jeopardy-gold);
+  color: var(--jeopardy-blue);
+}
+
+.start-button:active {
+  transform: scale(0.98);
+}
+
+.jeopardy-board {
+  background-color: var(--jeopardy-blue);
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.category-cell {
+  height: var(--category-height);
+  width: 100%;
+  background: var(--jeopardy-light-blue);
+  border: 3px solid var(--jeopardy-gold);
+  color: var(--jeopardy-text);
+  font-family: 'Korinna', serif;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  line-height: 1.1;
+  overflow: visible;
+}
+
+.category-cell span {
+  display: inline-block;
+  white-space: nowrap;
+  transform-origin: center center;
+  width: fit-content;
+}
+
+.question-cell {
+  height: var(--question-height);
+  background: var(--jeopardy-light-blue);
+  border: 3px solid var(--jeopardy-gold);
+  color: var(--jeopardy-gold);
+  font-family: 'Korinna', serif;
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+  aspect-ratio: 1.5;
+}
+
+.question-cell:hover:not(.answered) {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(255, 204, 0, 0.3);
+}
+
+.question-cell.answered {
+  background: rgba(10, 17, 114, 0.5);
+  color: rgba(255, 204, 0, 0.3);
+  cursor: default;
+}
+
+.scoreboard {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+  padding: 0 2rem;
+}
+
+.player-score {
+  background: var(--jeopardy-light-blue);
+  border: 4px solid var(--jeopardy-gold);
+  color: var(--jeopardy-text);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  font-family: 'Korinna', serif;
+  position: relative;
+  min-width: 200px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  transform: perspective(1000px) rotateX(10deg);
+}
+
+.player-score::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 30%;
+  background: linear-gradient(to bottom, rgba(255, 204, 0, 0.2), transparent);
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.player-score .name {
+  color: var(--jeopardy-gold);
+  font-family: 'Marker', cursive;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  transform: rotate(-3deg);
+}
+
+.player-score .score {
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.question-modal {
+  font-family: 'Korinna', serif;
+}
+
+.question-modal .question-text {
+  font-size: 2rem;
+  color: var(--jeopardy-text);
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.question-modal .answer-text {
+  font-size: 1.8rem;
+  color: var(--jeopardy-gold);
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.jeopardy-button {
+  background: var(--jeopardy-light-blue);
+  color: var(--jeopardy-text);
+  border: 2px solid var(--jeopardy-gold);
+  padding: 1rem 2rem;
+  font-family: 'Korinna', serif;
+  font-size: 1.2rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.jeopardy-button:hover {
+  background: var(--jeopardy-gold);
+  color: var(--jeopardy-blue);
+}
+
+.round-title {
+  font-family: 'Korinna', serif;
+  color: var(--jeopardy-gold);
+  font-size: 3rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+} 
